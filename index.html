@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>KoloTalk REAL CALLS + ADEBISI AI - By Sulaiman Abdul Razaq Adebisi</title>
+<script src="/socket.io/socket.io.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+body{background:#0b141a;color:#e9edef;height:100vh;display:flex;overflow:hidden}
+#login{position:fixed;inset:0;background:#111b21;z-index:99;display:flex;align-items:center;justify-content:center;padding:20px}
+.box{background:#202c33;width:100%;max-width:400px;padding:28px;border-radius:12px;text-align:center}
+.box h1{color:#00a884;font-size:28px}.box h2{color:#FFD700;font-size:11px;margin:6px 0 12px}
+.box input{width:100%;background:#2a3942;border:none;padding:14px;border-radius:8px;color:#fff;margin:6px 0;outline:none}
+.box button{width:100%;background:#00a884;color:#111b21;border:none;padding:14px;border-radius:24px;font-weight:700;margin-top:12px;cursor:pointer}
+.left{width:100%;max-width:430px;background:#111b21;border-right:1px solid #222d34;display:flex;flex-direction:column}
+@media(min-width:850px){.left{width:35%}}
+.top{background:#202c33;padding:10px 14px;display:flex;justify-content:space-between;height:60px}
+.tabs{display:flex;background:#202c33}
+.tabs button{flex:1;background:none;border:none;color:#8696a0;padding:12px 4px;font-size:11px;font-weight:700;border-bottom:3px solid transparent;cursor:pointer}
+.tabs button.active{color:#00a884;border-color:#00a884}
+.list{flex:1;overflow-y:auto}
+.item{display:flex;gap:12px;padding:12px 14px;cursor:pointer;border-bottom:1px solid #1f2c34}
+.item.active{background:#2a3942}
+.av{width:49px;height:49px;border-radius:50%;background:#00a884;display:flex;align-items:center;justify-content:center;font-weight:700;color:#111b21;font-size:20px}
+.av.ai{background:linear-gradient(135deg,#008751,#FFD700)}
+.right{flex:1;display:flex;flex-direction:column;background:#0b141a;position:relative}
+@media(max-width:850px){.right{position:fixed;inset:0;transform:translateX(100%);transition:.25s;z-index:5}.right.open{transform:translateX(0)}}
+.rhead{background:#202c33;padding:10px 14px;display:flex;align-items:center;gap:10px;height:60px}
+.msgs{flex:1;overflow-y:auto;padding:12px 4%;display:flex;flex-direction:column;gap:6px;background:#0b141a;background-image:url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')}
+.bub{max-width:75%;padding:7px 9px 5px;border-radius:8px;font-size:14.2px;word-break:break-word}
+.bub.me{align-self:flex-end;background:#005c4b}.bub.ai{align-self:flex-start;background:#202c33;border-left:2px solid #FFD700}.bub.them{align-self:flex-start;background:#202c33}
+.meta{font-size:10px;color:#ffffff8a;float:right;margin-left:8px;margin-top:5px}
+.input{background:#202c33;padding:6px 8px;display:flex;align-items:flex-end;gap:6px}
+.ibox{flex:1;background:#2a3942;border-radius:20px;display:flex;padding:4px 12px}
+.ibox textarea{flex:1;background:transparent;border:none;outline:none;color:#fff;resize:none;max-height:100px;padding:8px 2px;font-size:15px}
+.send{width:45px;height:45px;background:#00a884;border-radius:50%;border:none;color:#111b21;font-size:20px;cursor:pointer}
+.icon{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#8696a0;cursor:pointer;font-size:20px;background:none;border:none}
+.callScreen{position:fixed;inset:0;background:#000;z-index:200;display:none;flex-direction:column}
+.callScreen.active{display:flex}
+.videos{flex:1;position:relative;background:#0b141a}
+#remoteVideo{width:100%;height:100%;object-fit:cover}
+#localVideo{position:absolute;bottom:100px;right:20px;width:120px;height:160px;border-radius:12px;border:2px solid #00a884;object-fit:cover;background:#222}
+.callControls{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,#000);padding:20px;display:flex;justify-content:center;gap:20px;align-items:center}
+.ctrl{width:55px;height:55px;border-radius:50%;border:none;font-size:24px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.end{background:#ff3b30;color:#fff}
+.incoming{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#202c33;padding:20px;border-radius:16px;z-index:201;display:none;flex-direction:column;align-items:center;gap:12px;box-shadow:0 10px 40px #000;border:1px solid #2a3942;min-width:300px}
+.incoming.active{display:flex}
+</style>
+</head>
+<body>
+<div id="login"><div class="box">
+<h1>KoloTalk NG 💬</h1><h2>REAL CALLS + ADEBISI AI</h2>
+<p style="color:#8696a0;font-size:12px">By <b style="color:#00a884">Sulaiman Abdul Razaq Adebisi</b></p>
+<input id="fullname" placeholder="Full Name"><input id="username" placeholder="@username"><input id="phone" placeholder="Phone">
+<button onclick="join()">Enter KoloTalk →</button>
+</div></div>
+
+<div class="left">
+<div class="top"><b>KoloTalk NG <span style="color:#FFD700;font-size:10px">REAL CALLS</span></b><span>● LIVE</span></div>
+<div class="tabs"><button class="active" onclick="switchTab('chats',this)">CHATS</button><button onclick="switchTab('groups',this)">GROUPS</button><button onclick="switchTab('calls',this)">CALLS</button></div>
+<div class="list" id="list"></div>
+</div>
+
+<div class="right" id="right">
+<div class="rhead"><span style="cursor:pointer;font-size:22px" onclick="closeR()">←</span><div class="av" id="rAv">A</div><div style="flex:1"><b id="rName">Select chat</b><br><small id="rStatus" style="color:#8696a0">Tap 📞 or 📹 for REAL call</small></div><div style="display:flex;gap:16px;font-size:22px"><span style="cursor:pointer" onclick="makeCall('voice')">📞</span><span style="cursor:pointer" onclick="makeCall('video')">📹</span></div></div>
+<div class="msgs" id="msgs"></div>
+<div class="input" id="input" style="display:none">
+<button class="icon" onclick="document.getElementById('imgFile').click()">📎</button>
+<input type="file" id="imgFile" hidden accept="image/*" onchange="sendImage(this)">
+<div class="ibox"><textarea id="txt" placeholder="Type a message" rows="1" oninput="autoGrow(this)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();send()}"></textarea></div>
+<button class="icon" id="micBtn" onclick="toggleVoice()">🎤</button>
+<button class="send" onclick="send()">➤</button>
+</div>
+</div>
+
+<div class="callScreen" id="callScreen">
+<div class="videos">
+<video id="remoteVideo" autoplay playsinline></video>
+<video id="localVideo" autoplay playsinline muted></video>
+<div style="position:absolute;top:20px;left:20px;color:#fff"><h3 id="callNameDisplay">Calling...</h3><p id="callStatus">Connecting...</p></div>
+<div class="callControls">
+<button class="ctrl" style="background:#2a3942;color:#fff" onclick="toggleMute()">🎤</button>
+<button class="ctrl end" onclick="endRealCall()">❌</button>
+<button class="ctrl" style="background:#2a3942;color:#fff" onclick="toggleCam()">📹</button>
+</div>
+</div>
+</div>
+
+<div class="incoming" id="incoming">
+<div style="font-size:50px" id="incIcon">📞</div>
+<h3 id="incName">Incoming call...</h3>
+<p id="incType" style="color:#8696a0">Voice call</p>
+<div style="display:flex;gap:16px;margin-top:10px">
+<button onclick="declineCall()" style="background:#ff3b30;color:#fff;border:none;padding:12px 24px;border-radius:30px;font-weight:700;cursor:pointer">Decline</button>
+<button onclick="acceptCall()" style="background:#00a884;color:#111b21;border:none;padding:12px 24px;border-radius:30px;font-weight:700;cursor:pointer">Answer</button>
+</div>
+</div>
+
+<script>
+const socket=io();
+let me=JSON.parse(localStorage.getItem('kolo_full_me')||'null');
+let active=null, activeType='private', tab='chats';
+let users=[], groupsList=[], cachePrivate={};
+let pc=null, localStream=null, remoteUid=null, callTypeGlobal='voice', isCaller=false;
+let incomingOffer=null, incomingFrom=null;
+let muted=false, camOff=false;
+
+if(me){login.style.display='none'; socket.emit('joinKolo', me);}
+function join(){const fn=fullname.value.trim(), un=username.value.trim(), ph=phone.value.trim(); if(!fn||!un||!ph) return alert('Fill all'); me={uid:'kolo_'+Date.now(), fullname:fn, username:un, phone:ph, avatar:fn[0].toUpperCase()}; localStorage.setItem('kolo_full_me', JSON.stringify(me)); login.style.display='none'; socket.emit('joinKolo', me);}
+function switchTab(t,el){tab=t; document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active')); el.classList.add('active'); if(t==='calls'){document.getElementById('list').innerHTML=`<div style="padding:30px;text-align:center;color:#8696a0"><div style="font-size:50px">📞</div><h3>Calls</h3><p>Tap 📞 or 📹 inside any chat for REAL call</p></div>`; return;} render();}
+socket.on('users', u=>{users=u.filter(x=>x.uid!==me?.uid); render();});
+socket.on('groups', g=>{groupsList=g;});
+function render(){
+  const list=document.getElementById('list'); list.innerHTML='';
+  const aiDiv=document.createElement('div'); aiDiv.className='item'+(active==='adebisi_ai'?' active':''); aiDiv.onclick=()=>openChat('adebisi_ai','ai',{fullname:'ADEBISI AI 🤖',avatar:'A',phone:'AI by Sulaiman',isAI:true});
+  aiDiv.innerHTML=`<div class="av ai">A</div><div class="info"><div class="name">ADEBISI AI 🤖</div><div class="sub">Ask me anything</div></div>`; list.appendChild(aiDiv);
+  users.forEach(u=>{const d=document.createElement('div'); d.className='item'+(active===u.uid?' active':''); d.onclick=()=>openChat(u.uid,'private',u); d.innerHTML=`<div class="av">${u.avatar}</div><div class="info"><div class="name">${u.fullname}</div><div class="sub">${u.phone} • online - Tap for REAL call</div></div><div>📞</div>`; list.appendChild(d);});
+}
+function openChat(id,type,data){active=id; activeType=type; document.getElementById('right').classList.add('open'); document.getElementById('rName').textContent=data.fullname||data.name; document.getElementById('rAv').textContent=data.avatar; document.getElementById('rStatus').textContent=data.isAI?'ADEBISI AI by Sulaiman Adebisi':data.phone+' • online • REAL calls ready'; document.getElementById('input').style.display='flex'; document.getElementById('msgs').innerHTML=''; if(id==='adebisi_ai'){addBubble('Hello! I be ADEBISI AI by Sulaiman! REAL calls don dey work now! 📞📹 Open 2 phones to test!','ai'); return;} const chatId=[me.uid,id].sort().join('_'); if(cachePrivate[chatId]) cachePrivate[chatId].forEach(m=>addBubble(m.text,m.sender===me.uid?'me':'them',m.extra,m.mtype)); else socket.emit('loadPrivate', chatId);}
+socket.on('privateMsgs', ({chatId,msgs})=>{cachePrivate[chatId]=msgs; if([me.uid,active].sort().join('_')===chatId){msgsElem().innerHTML=''; msgs.forEach(m=>addBubble(m.text,m.sender===me.uid?'me':'them',m.extra,m.mtype));}});
+socket.on('newPrivate', ({chatId,msg})=>{if(!cachePrivate[chatId])cachePrivate[chatId]=[]; cachePrivate[chatId].push(msg); if([me.uid,active].sort().join('_')===chatId) addBubble(msg.text, msg.sender===me.uid?'me':'them', msg.extra, msg.mtype);});
+function msgsElem(){return document.getElementById('msgs');}
+function addBubble(text,who,extra=null,mtype=null){const box=msgsElem(); const d=document.createElement('div'); d.className='bub '+(who==='me'?'me':who==='ai'?'ai':'them'); let c=text; if(mtype==='image'&&extra) c=`${text}<br><img src="${extra}" style="max-width:230px;border-radius:10px;margin-top:6px">`; else if(mtype==='voice'&&extra) c=`${text}<br><audio controls src="${extra}" style="width:200px"></audio>`; else if(extra&&extra.startsWith('http')) c+=`<br><img src="${extra}" style="max-width:200px;border-radius:10px;margin-top:6px">`; d.innerHTML=`${c}<span class="meta">${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})} ✓✓</span>`; box.appendChild(d); box.scrollTop=box.scrollHeight;}
+function send(){const t=txt.value.trim(); if(!t||!active) return; txt.value=''; socket.emit('sendPrivate',{sender:me.uid,receiver:active,text:t,senderName:me.fullname});}
+function sendImage(input){if(!input.files[0]) return; const r=new FileReader(); r.onload=e=>{socket.emit('sendPrivate',{sender:me.uid,receiver:active,text:'📷 Image',extra:e.target.result,mtype:'image',senderName:me.fullname});}; r.readAsDataURL(input.files[0]);}
+function autoGrow(el){el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,100)+'px';}
+function closeR(){document.getElementById('right').classList.remove('open');}
+
+// REAL WEBRTC
+async function makeCall(type){
+  if(!active || active==='adebisi_ai') return alert('Select real person for chat first');
+  callTypeGlobal=type; isCaller=true; remoteUid=active;
+  document.getElementById('callScreen').classList.add('active');
+  document.getElementById('callNameDisplay').textContent=document.getElementById('rName').textContent;
+  document.getElementById('callStatus').textContent=type==='video'?'Calling video...':'Calling voice...';
+  await startPC();
+  const offer = await pc.createOffer(); await pc.setLocalDescription(offer);
+  socket.emit('callUser',{from:me.uid, to:remoteUid, fromName:me.fullname, callType:type, offer});
+}
+
+socket.on('incomingCall', async data=>{
+  incomingOffer=data.offer; incomingFrom=data.from; remoteUid=data.from; callTypeGlobal=data.type;
+  document.getElementById('incName').textContent=data.fromName+' is calling...';
+  document.getElementById('incType').textContent=data.type==='video'?'Video call':'Voice call';
+  document.getElementById('incIcon').textContent=data.type==='video'?'📹':'📞';
+  document.getElementById('incoming').classList.add('active');
+});
+
+async function acceptCall(){
+  document.getElementById('incoming').classList.remove('active');
+  document.getElementById('callScreen').classList.add('active');
+  document.getElementById('callNameDisplay').textContent=document.getElementById('incName').textContent;
+  document.getElementById('callStatus').textContent='Connected';
+  isCaller=false;
+  await startPC();
+  await pc.setRemoteDescription(new RTCSessionDescription(incomingOffer));
+  const answer=await pc.createAnswer(); await pc.setLocalDescription(answer);
+  socket.emit('answerCall',{to:incomingFrom, answer});
+}
+
+function declineCall(){document.getElementById('incoming').classList.remove('active'); socket.emit('endCall',{to:incomingFrom, from:me.uid});}
+socket.on('callAnswered', async data=>{await pc.setRemoteDescription(new RTCSessionDescription(data.answer)); document.getElementById('callStatus').textContent='Connected - REAL call live!';});
+socket.on('iceCandidate', async data=>{try{await pc.addIceCandidate(new RTCIceCandidate(data.candidate));}catch(e){}});
+socket.on('callEnded', ()=>{endRealCall();});
+
+async function startPC(){
+  pc=new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
+  localStream=await navigator.mediaDevices.getUserMedia({video:callTypeGlobal==='video', audio:true});
+  document.getElementById('localVideo').srcObject=localStream;
+  localStream.getTracks().forEach(t=>pc.addTrack(t, localStream));
+  pc.ontrack=e=>{document.getElementById('remoteVideo').srcObject=e.streams[0]; document.getElementById('callStatus').textContent='Connected - Talking...';};
+  pc.onicecandidate=e=>{if(e.candidate) socket.emit('iceCandidate',{to:remoteUid, candidate:e.candidate});};
+}
+
+function endRealCall(){
+  if(pc){pc.close(); pc=null;}
+  if(localStream){localStream.getTracks().forEach(t=>t.stop()); localStream=null;}
+  document.getElementById('callScreen').classList.remove('active');
+  document.getElementById('incoming').classList.remove('active');
+  if(remoteUid) socket.emit('endCall',{to:remoteUid, from:me.uid});
+  remoteUid=null;
+}
+function toggleMute(){if(!localStream) return; muted=!muted; localStream.getAudioTracks().forEach(t=>t.enabled=!muted);}
+function toggleCam(){if(!localStream) return; camOff=!camOff; localStream.getVideoTracks().forEach(t=>t.enabled=!camOff);}
+
+async function toggleVoice(){alert('Use 📎 for image, type for text, and 📞 📹 for REAL calls - by Sulaiman Adebisi');}
+</script>
+</body>
+                        </html>
